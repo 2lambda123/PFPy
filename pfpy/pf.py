@@ -235,16 +235,14 @@ class StudyCase(SubscribablePFObject):
         elmres_name : str
             The name of the ElmRes object which is created.
         """
-        elmres = ElmRes(self.CreateObject('ElmRes',elmres_name))
-        if elmres is None:
+        if (elmres := ElmRes(self.CreateObject('ElmRes',elmres_name))) is None:
             raise Exception('Could not create ElmRes!')
         else:
             self.elmres[elmres.obj_name] = elmres
         return elmres
     
     def create_comres(self, comres_name):
-        comres = ComRes(self.CreateObject('ComRes', comres_name))
-        if comres is None:
+        if (comres := ComRes(self.CreateObject('ComRes', comres_name))) is None:
             raise Exception('Could not create ComRes!')
         else:
             self.comres[comres.obj_name] = comres
@@ -493,8 +491,7 @@ def parse_name(name):
     its name and class"""
 
     pattern = '^(\w+)\.([a-zA-z]+$)'
-    match = re.match(pattern, name)
-    if match:
+    if match := re.match(pattern, name):
         return match.groups()
     else:
         raise ValueError
@@ -559,8 +556,7 @@ def print_tree(root):
         print(line)
 
 def _walk(root, lvl_chars=0):
-    children = root.GetContents()
-    if children:
+    if children := root.GetContents():
         yield ' ' * lvl_chars + '| ' + f'{root.loc_name}.{root.GetClassName()}'
         lvl_chars += len(root.loc_name)//2 
         for child in children:

@@ -20,8 +20,7 @@ outputs = {
     } 
 }
 
-generate = True
-if generate:
+if generate := True:
     # Defining model inputs
     inputpath = os.path.join(folder_path, 'signal_PCCVoltFile.csv')
     inputs = [

@@ -13,9 +13,27 @@ pfhandle = None
 class BasePFObject: 
     
     def __init__(self, pfobject):
+        """"This function initializes an object with a given pfobject and assigns it to the self.pfobject attribute."
+        Parameters:
+            - pfobject (object): The pfobject to be assigned to the self.pfobject attribute.
+        Returns:
+            - None: This function does not return any value.
+        Processing Logic:
+            - Assigns the given pfobject to the self.pfobject attribute."""
+        
         self.pfobject = pfobject
 
     def __eq__(self, other):
+        """"Checks if the current object is equal to another object based on their names."
+        Parameters:
+            - other (BasePFObject): The object to compare with.
+        Returns:
+            - bool: True if the names of both objects are equal, False otherwise.
+        Processing Logic:
+            - Check if the other object is an instance of BasePFObject.
+            - If yes, compare the names of both objects.
+            - If no, compare the name of the current object with the other object directly."""
+        
         if isinstance(other, BasePFObject):
             return self.name == other.name
         return self.name == other
@@ -26,6 +44,18 @@ class BasePFObject:
         return getattr(self.pfobject, name)
         
     def __setattr__(self, name, value):
+        """Sets an attribute on the provided object or its underlying PFObject.
+        Parameters:
+            - self (BasePFObject): The object to set the attribute on.
+            - name (str): The name of the attribute to set.
+            - value (any): The value to set the attribute to.
+        Returns:
+            - None: This function does not return anything.
+        Processing Logic:
+            - If the name is 'pfobject', set the attribute directly on the object.
+            - If the name is an existing attribute on the underlying PFObject, set the attribute on the PFObject.
+            - Otherwise, use the default __setattr__ function to set the attribute."""
+        
         if name == 'pfobject':
             self.__dict__[name] = value
         elif hasattr(self.pfobject, name):
@@ -35,19 +65,58 @@ class BasePFObject:
 
     @property
     def name(self):
+        """Returns the name and class of an object.
+        Parameters:
+            - self (object): The object to be evaluated.
+        Returns:
+            - str: The name and class of the object.
+        Processing Logic:
+            - Concatenates the name and class of the object.
+            - Uses the f-string method.
+            - Returns the result as a string."""
+        
         return f'{self.obj_name}.{self.obj_class}' 
     
     @property
     def obj_name(self):
+        """"Returns the location name of the given object.
+        Parameters:
+            - self (object): The object whose location name is being retrieved.
+        Returns:
+            - str: The location name of the object.
+        Processing Logic:
+            - Retrieves the location name from the object's pfobject attribute.""""
+        
         return self.pfobject.loc_name
 
     @property
     def obj_class(self):
+        """Returns the class name of the given object.
+        Parameters:
+            - self (object): The object whose class name is to be returned.
+        Returns:
+            - str: The class name of the given object.
+        Processing Logic:
+            - Uses the GetClassName() method.
+            - Returns a string.
+            - No parameters are required."""
+        
         return self.pfobject.GetClassName()
 
 class SubscribablePFObject(BasePFObject):
     
     def __init__(self, pfobject, **kwargs):
+        """Initializes the object with a given pfobject and optional observers.
+        Parameters:
+            - pfobject (object): The pfobject to be used for initialization.
+            - **kwargs (optional): Additional keyword arguments that can be passed in, including 'observers' to add observers.
+        Returns:
+            - None: This function does not return anything.
+        Processing Logic:
+            - Initializes the object with the given pfobject.
+            - Adds any optional observers if provided.
+            - If no observers are provided, the function will still run without any errors."""
+        
         super().__init__(pfobject)
         self._observers = []
         try:
@@ -56,16 +125,47 @@ class SubscribablePFObject(BasePFObject):
             pass
 
     def observers_notify(self, event):
+        """Notifies all observers of an event.
+        Parameters:
+            - self (object): The object calling the function.
+            - event (str): The event to be passed to the observers.
+        Returns:
+            - None: The function does not return anything.
+        Processing Logic:
+            - Loop through all observers.
+            - Call the update method on each observer.
+            - Pass in the object and event as arguments."""
+        
         for observer in self._observers:
             observer.update(self, event)
             
     def observers_add(self, observers):
+        """Adds one or more observers to the list of observers.
+        Parameters:
+            - observers (list or object): List of observers or single observer to be added.
+        Returns:
+            - None: Does not return anything.
+        Processing Logic:
+            - Checks if the parameter is a list.
+            - If not, converts it to a list.
+            - Appends each observer to the list of observers."""
+        
         if not isinstance(observers, list):
             observers = [observers]
         for observer in observers:
             self._observers.append(observer)
     
     def observers_remove(self, observers):
+        """"Removes given observers from the list of observers for the current object."
+        Parameters:
+            - observers (list or object): List of observers or single observer to be removed.
+        Returns:
+            - None: No return value.
+        Processing Logic:
+            - Converts single observer to list if needed.
+            - Iterates through list of observers.
+            - Removes each observer from the list of observers."""
+        
         if not isinstance(observers, list):
             observers = [observers]
         for observer in observers[0]:
@@ -74,6 +174,15 @@ class SubscribablePFObject(BasePFObject):
 class Project(BasePFObject):
     
     def __init__(self, project_name, project_folder=None):
+        """This function initializes a project by creating a study case container and a networks container.
+        It takes in two parameters, project_name and project_folder, where project_folder is an optional parameter.
+        It returns an object of type Network.
+        The function first tries to join the project_folder and project_name together to create a project_path.
+        If this fails, it sets project_path to project_name.
+        Then, it activates the project_path and creates the study case and networks containers.
+        An example of usage would be:
+        project = __init__(project_name='MyProject', project_folder='C:/Users/Projects')"""
+        
         try:
             project_path = os.path.join(project_folder, project_name)
         except TypeError:
@@ -90,6 +199,20 @@ class Project(BasePFObject):
             self.networks[pfobject.loc_name] = Network(pfobject, observers = self.study_cases)
     
     def activate(self, project_path):
+        """Activates a project and returns the active project.
+        Parameters:
+            - project_path (str): Path to the project to be activated.
+        Returns:
+            - Project (str): The active project.
+        Processing Logic:
+            - Calls pfhandle.ActivateProject() to activate the project.
+            - If the project cannot be activated, raises a RuntimeError.
+            - Otherwise, returns the active project using pfhandle.GetActiveProject().
+        Example:
+            project = activate("C:/Users/JohnDoe/Documents/Project1")
+            print(project)
+            # Output: "Project1""""
+        
         if pfhandle.ActivateProject(project_path):
             raise RuntimeError('Could not activate the project')
         else:
@@ -97,6 +220,15 @@ class Project(BasePFObject):
         
 class StudyCaseContainer(dict):
     def __init__(self):
+        """"Initializes a StudyCase object with a dictionary of StudyCases and sets the active key to the currently active StudyCase."
+        Parameters:
+            - None
+        Returns:
+            - None
+        Processing Logic:
+            - Creates a dictionary of StudyCases.
+            - Sets the active key to the currently active StudyCase."""
+        
         scs = {}
         obj_list = pfhandle.GetProjectFolder('study').GetChildren(1,'*.IntCase',1)
         for obj in obj_list:
@@ -106,12 +238,24 @@ class StudyCaseContainer(dict):
 
     @property
     def active_study_case(self):
+        """"Returns the active study case, if one exists, from the current object.
+        Parameters:
+            - self (object): The current object.
+        Returns:
+            - object: The active study case, if one exists. Otherwise, returns None.
+        Processing Logic:
+            - Checks if there is an active key.
+            - If there is an active key, returns the corresponding study case.
+            - If there is no active key, returns None.""""
+        
         if self._active_key:
             return self[self._active_key]
         else:
             return None
     
     def update(self, caller, event):
+        """"""
+        
         if isinstance(caller, StudyCase):
             if event == 'activated':
                 self._active_key = caller.obj_name
@@ -130,6 +274,8 @@ class StudyCaseContainer(dict):
 class StudyCase(SubscribablePFObject):
 
     def __init__(self, pfobject, *args, **kwargs):
+        """"""
+        
         super().__init__(pfobject)
         try:
             self.observers_add(kwargs['observers'])
@@ -156,6 +302,8 @@ class StudyCase(SubscribablePFObject):
             self.mod = self.CreateObject('ComMod', 'Modal Analysis')
         
     def activate(self):
+        """"""
+        
         if self.GetFullName() == pfhandle.GetActiveStudyCase().GetFullName():
             return True
         elif self.pfobject.Activate():
@@ -165,6 +313,8 @@ class StudyCase(SubscribablePFObject):
             return True
 
     def deactivate(self):
+        """"""
+        
         if self.GetFullName() != pfhandle.GetActiveStudyCase().GetFullName():
             return True
         elif self.pfobject.Deactivate():
@@ -175,6 +325,8 @@ class StudyCase(SubscribablePFObject):
             
     def _initialize_modal(self,  path, iLeft=1, iRight=1, iPart=1, iSysMatsMatl=1, iEValMatl=1, iREVMatl=1, 
                     iLEVMatl=1, iPartMatl=1):
+        """"""
+        
         self.mod.iLeft = iLeft
         self.mod.iRight = iRight
         self.mod.iPart = iPart
@@ -200,6 +352,8 @@ class StudyCase(SubscribablePFObject):
         return self.inc.Execute()
 
     def modal_analysis(self, path):
+        """"""
+        
         pfhandle.ResetCalculation()
         if self._initialize_modal(path):
             raise RuntimeError('Simulation initialization failed.')
